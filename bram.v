@@ -1,6 +1,6 @@
 module bram(clk, DI, ADDR, EN, SSR, WE, DO);
 
-input [11:0] ADDR;
+input [10:0] ADDR;
 input clk, EN, SSR, WE;
 input [7:0] DI;
 output [7:0] DO;
@@ -83,7 +83,7 @@ RAMB16_S9 #(
       .INIT_3D(256'h00_00_00_00_00_00_00_00_00_00_00_00_00_00_00_00_00_00_00_00_00_00_00_00_00_00_00_00_00_00_00_00),
       .INIT_3E(256'h00_00_00_00_00_00_00_00_00_00_00_00_00_00_00_00_00_00_00_00_00_00_00_00_00_00_00_00_00_00_00_00),
       .INIT_3F(256'h00_00_00_00_00_00_00_00_00_00_00_00_00_00_00_00_00_00_00_00_00_00_00_00_00_00_00_00_00_00_00_00),
-
+		
       // The next set of INITP_xx are for the parity bits
       // Address 0 to 511
       .INITP_00(256'h0000000000000000000000000000000000000000000000000000000000000000),
@@ -97,13 +97,14 @@ RAMB16_S9 #(
       // Address 1536 to 2047
       .INITP_06(256'h0000000000000000000000000000000000000000000000000000000000000000),
       .INITP_07(256'h0000000000000000000000000000000000000000000000000000000000000000)
+		
 ) RAMB16_S9_inst (
       .DO(DO),      // 8-bit Data Output
-      .DOP(DOP),    // 1-bit parity Output
+      //.DOP(DOP),    // 1-bit parity Output
       .ADDR(ADDR),  // 11-bit Address Input
       .CLK(clk),    // Clock
       .DI(DI),      // 8-bit Data Input
-      .DIP(DIP),    // 1-bit parity Input
+      //.DIP(DIP),    // 1-bit parity Input
       .EN(EN),      // RAM Enable Input
       .SSR(SSR),    // Synchronous Set/Reset Input
       .WE(WE)       // Write Enable Input

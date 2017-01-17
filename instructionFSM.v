@@ -82,12 +82,12 @@ end
 
 always @(*)
 begin
-	LCD_RS = data[9];
-	LCD_RW = data[8];
-	SF_D11 = data[7];
-	SF_D10 = data[6];
-	SF_D9 = data[5];
-	SF_D8 = data[4];
+	LCD_RS 	= data[9];
+	LCD_RW	= data[8];
+	SF_D11	= data[7];
+	SF_D10	= data[6];
+	SF_D9	= data[5];
+	SF_D8	= data[4];
 	FSM_done = 0;
 	case (state)
 		TX_UPPER_FOUR_BITS: begin
