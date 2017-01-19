@@ -20,6 +20,7 @@ reg [15:0] 	state;
 reg [19:0] 	counter;
 reg [10:0] 	addr_reg;
 reg [25:0]  refresh_counter;
+//reg high;
 
 wire FSM_done, instrFSM_LCD_E, instrFSM_LCD_RS, instrFSM_LCD_RW, instrFSM_EN;
 wire instrFSM_SF_D8, instrFSM_SF_D9, instrFSM_SF_D10, instrFSM_SF_D11;
@@ -44,8 +45,9 @@ parameter [15:0] CONFIG_4 	= 16'b0001000000000000;
 parameter [15:0] CONFIG_5 	= 16'b0010000000000000;
 parameter [15:0] CONFIG_6 	= 16'b0100000000000000;
 parameter [15:0] DISPLAY 	= 16'b1000000000000000;
-
-
+parameter [15:0] CF1 	= 16'b1100000000000000;
+parameter [15:0] DS1 	= 16'b1110000000000000;
+parameter [15:0] WAIT 	= 16'b1111000000000000;
 
 bram bramINST(clk, 8'd0, addr, 1'd1, 1'd0, 1'd0, char);
 
@@ -64,6 +66,7 @@ always @(posedge clk or posedge reset) begin
 		state = INIT_1;
 		addr_reg = 11'd0;
 		refresh_counter = 26'd0;
+		//high = 0;
 	end
 	else begin
 		case(state)
@@ -144,8 +147,9 @@ always @(posedge clk or posedge reset) begin
 					state = CONFIG_2;
 			end
 			CONFIG_2: begin
-				if(FSM_done)
+				if(FSM_done) begin
 					state = CONFIG_3;
+				end
 			end
 			CONFIG_3: begin
 				if(FSM_done)
@@ -172,26 +176,69 @@ always @(posedge clk or posedge reset) begin
 			DISPLAY: begin
 				/* give the next address untill it reaches the 31 */
 				if(FSM_done) begin
-					if(addr_reg < 11'd31) begin
+					if(addr_reg <= 11'd55) begin
 						addr_reg = addr_reg + 1'b1;
+						state = DISPLAY;
 					end
+					else 
+						state = CF1;
 				end
 
 				/* refresh the address every one second */
-				if(addr_reg >= 11'd31) begin
+				/*if(addr_reg >= 11'd55) begin
 					if(refresh_counter == `T_REFRESH) begin
-						if(addr_reg == 11'd31) begin
-							addr_reg = 11'd32;
+						high = 1;
+						state = CONFIG_6;
+						if(addr_reg == 11'd55) begin
+							addr_reg = 11'd56;
 						end
 						else begin
-							addr_reg = 11'd31;
+							addr_reg = 11'd55;
 						end
 						refresh_counter = 0;
 					end
-					refresh_counter = refresh_counter + 1;
+					else
+						refresh_counter = refresh_counter + 1;
 				end
+				else*/
+				//state = DISPLAY;
+			end
+			CF1: begin
+				addr_reg = 0;
+				if(refresh_counter == `T_REFRESH) begin
+					state = DS1;
+					refresh_counter = 0;
+					
+				end
+				else begin
+					refresh_counter = refresh_counter + 1;
+					state = CF1;
+				end
+			end
+			DS1: begin
+				if(FSM_done) begin
+					if(addr_reg == 11'd54) begin
+						addr_reg = 11'd56;
+					end 
+					else if(addr_reg < 11'd54) begin
+						addr_reg = addr_reg + 1'b1;
+						state = DS1;
+					end
+					else 
+						state = WAIT;
+				end
+			end
+			WAIT: begin
+				addr_reg = 0;
+				if(refresh_counter == `T_REFRESH) begin
+					state = DISPLAY;
+					refresh_counter = 0;
 
-				state = DISPLAY;
+				end
+				else begin
+					refresh_counter = refresh_counter + 1;
+					state = WAIT;
+				end
 			end
 		endcase
 	end
@@ -300,6 +347,9 @@ always @(*) begin
 		CONFIG_5: begin
 		end
 		CONFIG_6: begin
+			//if(addr_reg == 11'd55 || addr_reg == 11'd56)
+			//	tx_data = 10'b00_1100_1111;
+			//else
 			tx_data = 10'b00_1000_0000;
 			LCD_RS 	= instrFSM_LCD_RS;
 			LCD_RW 	= instrFSM_LCD_RW;
@@ -310,7 +360,19 @@ always @(*) begin
 			SF_D8 	= instrFSM_SF_D8;
 		end
 		DISPLAY: begin
-			tx_data = {1'b1, 1'b0, char};
+			//if(high || addr_reg < 11'd55) begin
+				tx_data = {1'b1, 1'b0, char};
+				LCD_RS 	= instrFSM_LCD_RS;
+				LCD_RW 	= instrFSM_LCD_RW;
+				LCD_E 	= instrFSM_LCD_E;
+				SF_D11 	= instrFSM_SF_D11;
+				SF_D10 	= instrFSM_SF_D10;
+				SF_D9 	= instrFSM_SF_D9;
+				SF_D8 	= instrFSM_SF_D8;
+			
+		end
+		WAIT: begin
+			tx_data = 10'b00_1000_0001;
 			LCD_RS 	= instrFSM_LCD_RS;
 			LCD_RW 	= instrFSM_LCD_RW;
 			LCD_E 	= instrFSM_LCD_E;
@@ -318,6 +380,27 @@ always @(*) begin
 			SF_D10 	= instrFSM_SF_D10;
 			SF_D9 	= instrFSM_SF_D9;
 			SF_D8 	= instrFSM_SF_D8;
+		end
+		CF1: begin
+			tx_data = 10'b00_1000_0001;
+			LCD_RS 	= instrFSM_LCD_RS;
+			LCD_RW 	= instrFSM_LCD_RW;
+			LCD_E 	= instrFSM_LCD_E;
+			SF_D11 	= instrFSM_SF_D11;
+			SF_D10 	= instrFSM_SF_D10;
+			SF_D9 	= instrFSM_SF_D9;
+			SF_D8 	= instrFSM_SF_D8;
+		end
+		DS1: begin
+			//if(high || addr_reg < 11'd55) begin
+				tx_data = {1'b1, 1'b0, char};
+				LCD_RS 	= instrFSM_LCD_RS;
+				LCD_RW 	= instrFSM_LCD_RW;
+				LCD_E 	= instrFSM_LCD_E;
+				SF_D11 	= instrFSM_SF_D11;
+				SF_D10 	= instrFSM_SF_D10;
+				SF_D9 	= instrFSM_SF_D9;
+				SF_D8 	= instrFSM_SF_D8;
 		end
 	endcase
 end
