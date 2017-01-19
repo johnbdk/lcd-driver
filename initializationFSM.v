@@ -5,7 +5,7 @@
 `define T_100_US	4999
 `define T_40_US 	1999
 `define T_1_64_MS	81999
-`define T_REFRESH	491999
+`define T_REFRESH	49999999
 
 module initializationFSM(clk, reset, LCD_E, LCD_RS, LCD_RW,
 							SF_D8, SF_D9, SF_D10, SF_D11);
