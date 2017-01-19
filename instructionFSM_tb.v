@@ -12,10 +12,10 @@ module instructionFSM_tb;
 	wire LCD_E;
 	wire LCD_RS;
 	wire LCD_RW;
-	wire DB4;
-	wire DB5;
-	wire DB6;
-	wire DB7;
+	wire SF_D8;
+	wire SF_D9;
+	wire SF_D10;
+	wire SF_D11;
 	wire FSM_done;
 
 	// Instantiate the Unit Under Test (UUT)
@@ -27,10 +27,10 @@ module instructionFSM_tb;
 		.LCD_E(LCD_E), 
 		.LCD_RS(LCD_RS), 
 		.LCD_RW(LCD_RW), 
-		.DB4(DB4), 
-		.DB5(DB5), 
-		.DB6(DB6), 
-		.DB7(DB7),
+		.SF_D8(SF_D8), 
+		.SF_D9(SF_D9), 
+		.SF_D10(SF_D10), 
+		.SF_D11(SF_D11),
 		.FSM_done(FSM_done)
 	);
 

@@ -5,7 +5,7 @@
 `define T_100_US	4999
 `define T_40_US 	1999
 `define T_1_64_MS	81999
-`define T_REFRESH	49999999
+`define T_REFRESH	491999
 
 module initializationFSM(clk, reset, LCD_E, LCD_RS, LCD_RW,
 							SF_D8, SF_D9, SF_D10, SF_D11);
@@ -16,11 +16,10 @@ output reg SF_D8, SF_D9, SF_D10, SF_D11;
 output reg LCD_E, LCD_RW, LCD_RS;
 
 reg [9:0]	tx_data;
-reg [15:0] 	state;
+reg [18:0] 	state;
 reg [19:0] 	counter;
 reg [10:0] 	addr_reg;
 reg [25:0]  refresh_counter;
-//reg high;
 
 wire FSM_done, instrFSM_LCD_E, instrFSM_LCD_RS, instrFSM_LCD_RW, instrFSM_EN;
 wire instrFSM_SF_D8, instrFSM_SF_D9, instrFSM_SF_D10, instrFSM_SF_D11;
@@ -29,25 +28,25 @@ wire [10:0] addr;
 wire [7:0]	char;
 
 /* states of FSM */
-parameter [15:0] INIT_1		= 16'b0000000000000001;
-parameter [15:0] INIT_2 	= 16'b0000000000000010;
-parameter [15:0] INIT_3 	= 16'b0000000000000100;
-parameter [15:0] INIT_4 	= 16'b0000000000001000;
-parameter [15:0] INIT_5 	= 16'b0000000000010000;
-parameter [15:0] INIT_6 	= 16'b0000000000100000;
-parameter [15:0] INIT_7 	= 16'b0000000001000000;
-parameter [15:0] INIT_8 	= 16'b0000000010000000;
-parameter [15:0] INIT_9 	= 16'b0000000100000000;
-parameter [15:0] CONFIG_1 	= 16'b0000001000000000;
-parameter [15:0] CONFIG_2 	= 16'b0000010000000000;
-parameter [15:0] CONFIG_3 	= 16'b0000100000000000;
-parameter [15:0] CONFIG_4 	= 16'b0001000000000000;
-parameter [15:0] CONFIG_5 	= 16'b0010000000000000;
-parameter [15:0] CONFIG_6 	= 16'b0100000000000000;
-parameter [15:0] DISPLAY 	= 16'b1000000000000000;
-parameter [15:0] CF1 	= 16'b1100000000000000;
-parameter [15:0] DS1 	= 16'b1110000000000000;
-parameter [15:0] WAIT 	= 16'b1111000000000000;
+parameter [18:0] INIT_1		= 19'b0000000000000000001;
+parameter [18:0] INIT_2 	= 19'b0000000000000000010;
+parameter [18:0] INIT_3 	= 19'b0000000000000000100;
+parameter [18:0] INIT_4 	= 19'b0000000000000001000;
+parameter [18:0] INIT_5 	= 19'b0000000000000010000;
+parameter [18:0] INIT_6 	= 19'b0000000000000100000;
+parameter [18:0] INIT_7 	= 19'b0000000000001000000;
+parameter [18:0] INIT_8 	= 19'b0000000000010000000;
+parameter [18:0] INIT_9 	= 19'b0000000000100000000;
+parameter [18:0] CONFIG_1 	= 19'b0000000001000000000;
+parameter [18:0] CONFIG_2 	= 19'b0000000010000000000;
+parameter [18:0] CONFIG_3 	= 19'b0000000100000000000;
+parameter [18:0] CONFIG_4 	= 19'b0000001000000000000;
+parameter [18:0] CONFIG_5 	= 19'b0000010000000000000;
+parameter [18:0] CONFIG_6 	= 19'b0000100000000000000;
+parameter [18:0] DISPLAY 	= 19'b0001000000000000000;
+parameter [18:0] CF1 		= 19'b0010000000000000000;
+parameter [18:0] DS1 		= 19'b0100000000000000000;
+parameter [18:0] WAIT 		= 19'b1000000000000000000;
 
 bram bramINST(clk, 8'd0, addr, 1'd1, 1'd0, 1'd0, char);
 
@@ -66,7 +65,6 @@ always @(posedge clk or posedge reset) begin
 		state = INIT_1;
 		addr_reg = 11'd0;
 		refresh_counter = 26'd0;
-		//high = 0;
 	end
 	else begin
 		case(state)
@@ -174,7 +172,7 @@ always @(posedge clk or posedge reset) begin
 				end
 			end
 			DISPLAY: begin
-				/* give the next address untill it reaches the 31 */
+				/* give the next address untill it reaches the 55 */
 				if(FSM_done) begin
 					if(addr_reg <= 11'd55) begin
 						addr_reg = addr_reg + 1'b1;
@@ -183,25 +181,6 @@ always @(posedge clk or posedge reset) begin
 					else 
 						state = CF1;
 				end
-
-				/* refresh the address every one second */
-				/*if(addr_reg >= 11'd55) begin
-					if(refresh_counter == `T_REFRESH) begin
-						high = 1;
-						state = CONFIG_6;
-						if(addr_reg == 11'd55) begin
-							addr_reg = 11'd56;
-						end
-						else begin
-							addr_reg = 11'd55;
-						end
-						refresh_counter = 0;
-					end
-					else
-						refresh_counter = refresh_counter + 1;
-				end
-				else*/
-				//state = DISPLAY;
 			end
 			CF1: begin
 				addr_reg = 0;
@@ -347,9 +326,6 @@ always @(*) begin
 		CONFIG_5: begin
 		end
 		CONFIG_6: begin
-			//if(addr_reg == 11'd55 || addr_reg == 11'd56)
-			//	tx_data = 10'b00_1100_1111;
-			//else
 			tx_data = 10'b00_1000_0000;
 			LCD_RS 	= instrFSM_LCD_RS;
 			LCD_RW 	= instrFSM_LCD_RW;
@@ -360,7 +336,6 @@ always @(*) begin
 			SF_D8 	= instrFSM_SF_D8;
 		end
 		DISPLAY: begin
-			//if(high || addr_reg < 11'd55) begin
 				tx_data = {1'b1, 1'b0, char};
 				LCD_RS 	= instrFSM_LCD_RS;
 				LCD_RW 	= instrFSM_LCD_RW;
@@ -392,7 +367,6 @@ always @(*) begin
 			SF_D8 	= instrFSM_SF_D8;
 		end
 		DS1: begin
-			//if(high || addr_reg < 11'd55) begin
 				tx_data = {1'b1, 1'b0, char};
 				LCD_RS 	= instrFSM_LCD_RS;
 				LCD_RW 	= instrFSM_LCD_RW;
